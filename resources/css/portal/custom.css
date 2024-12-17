@@ -1,0 +1,11 @@
+/* PLACE YOUR CUSTOM STYLES IN THIS FILE */
+.table-gmlist {
+    width: 100%;
+    border: none;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    -webkit-border-radius:;
+    -moz-border-radius:;
+    -ms-border-radius:;
+    -o-border-radius:;
+}
