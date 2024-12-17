@@ -14,7 +14,7 @@ return [
     'currency_name' => 'Coin',
     'encryption_type' => 'base64',
     'level_up_cap' => '150',
-    'logo' => 'fikkkkk.png',
+    'logo' => 'logo-8.png',
     'server_ip' => '127.0.0.1',
     'server_name' => 'Might Development',
     'fbfp' => 'https://www.facebook.com/pwcr.indo',

@@ -350,7 +350,7 @@ class DonateController extends Controller
                 'reference_id' => $merchantRef,
                 'user_id' => Auth::user()->ID,
                 'amount' => $amount + $bonus,
-                'money' => $request->input('dollars'),
+                'money' =>  $amount,
                 'status_code' => '0',
                 'promo_code' => $request->input('promo_code')
             ]);
