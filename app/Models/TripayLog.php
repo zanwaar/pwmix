@@ -20,18 +20,6 @@ class TripayLog extends Model
      */
     protected $fillable = ['trx_id', 'user_id', 'amount', 'money', 'status', 'status_code', 'reference_id', 'promo_code'];
 
-    /**
-     * The primary key for the model.
-     *
-     * @var string
-     */
-    protected $primaryKey = 'trx_id';
-
-    /**
-     * @var string
-     */
-    protected $keyType = 'string';
-
     public static function trxDone()
     {
         $count = self::where('status', 'berhasil')->count();

@@ -335,6 +335,7 @@ class DonateController extends Controller
         ];
 
         $merchantRef = 'INV-' . time();
+        $trx_id = time();
         $bonus = 0;
 
         if (config('tripay.bonusess')) {
@@ -347,7 +348,7 @@ class DonateController extends Controller
         if (auth()->check()) {
 
             TripayLog::create([
-                'trx_id' =>    $merchantRef,
+                'trx_id' => $trx_id,
                 'reference_id' => $merchantRef,
                 'user_id' => Auth::user()->ID,
                 'amount' => $amount + $bonus,
