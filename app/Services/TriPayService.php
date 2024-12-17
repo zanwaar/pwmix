@@ -108,7 +108,7 @@ class TripayService
         // Decode JSON untuk mengambil data transaksi
         $data = json_decode($json, true);
         // buat log
-        \Log::info($data);
+        \Log::info($data);  
 
         // Ambil data dari callback
         $trx_id = $data['trx_id'];
