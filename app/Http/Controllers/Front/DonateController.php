@@ -347,6 +347,7 @@ class DonateController extends Controller
         if (auth()->check()) {
 
             TripayLog::create([
+                'trx_id' =>    $merchantRef,
                 'reference_id' => $merchantRef,
                 'user_id' => Auth::user()->ID,
                 'amount' => $amount + $bonus,
