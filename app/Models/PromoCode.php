@@ -30,4 +30,10 @@ class PromoCode extends Model
         return $data;
     }
 
+       // Relasi ke User
+       public function user()
+       {
+           return $this->belongsTo(User::class, 'streamer_id');
+       }
+
 }

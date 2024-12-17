@@ -53,6 +53,7 @@ class SystemController extends Controller
     public function saveApps(Request $request): RedirectResponse
     {
         $apps = config('pw-config.system.apps');
+
         foreach (array_keys($apps) as $app) {
             if ($request->has($app) === true) {
                 Config::write('pw-config.system.apps.' . $app, true);
@@ -67,42 +68,52 @@ class SystemController extends Controller
      * Save settings
      *
      * @param Request $request
-     * @return RedirectResponse
+     * @return RedirectResponse  
      */
     public function saveSettings(Request $request): RedirectResponse
     {
-        $validate = $request->validate([
-            'server_name' => 'required|string',
-            'discord' => 'required|string',
-            'currency_name' => 'required|string',
-            'server_ip' => 'required|ipv4',
-            'server_version' => 'required|string',
-            'encryption_type' => 'required|string',
-            'fbfp' => 'required|string',
-            'fakeonline' => 'required|numeric',
-        ]);
-
-        if ($request->hasFile('logo')) {
-            $request->validate([
-                'logo' => [
-                    'image',
-                    'mimes:png',
-                    Rule::dimensions()->ratio(1 / 1 )->width(128)->height(128)
-                ]
+        try {
+            $validate = $request->validate([
+                'server_name' => 'required|string',
+                'discord' => 'required|string',
+                'currency_name' => 'required|string',
+                'server_ip' => 'required|ipv4',
+                'server_version' => 'required|string',
+                'encryption_type' => 'required|string',
+                'fbfp' => 'required|string',
+                'fakeonline' => 'required|numeric',
             ]);
-            $logo = $request->file('logo')->getClientOriginalName();
-            Config::write('pw-config.logo', $logo);
-            $request->file('logo')->storeAs('logo', $logo, config('filesystems.public'));
-        }
 
-        foreach ($validate as $settings => $value) {
-            Config::write('pw-config.' . $settings, $value);
+            if ($request->hasFile('logo')) {
+                $request->validate([
+                    'logo' => [
+                        'image',
+                        'mimes:png',
+                        Rule::dimensions()->ratio(1 / 1)->width(128)->height(128)
+                    ]
+                ]);
+                $logoFile = $request->file('logo');
+                if ($logoFile->isValid()) {
+                    $logo = $logoFile->getClientOriginalName();
+                    Config::write('pw-config.logo', $logo);
+                    $logoFile->storeAs('logo', $logo, 'public');
+                } else {
+                    return back()->withErrors('Uploaded file is invalid.');
+                }
+            }
+
+            foreach ($validate as $settings => $value) {
+                Config::write('pw-config.' . $settings, $value);
+            }
+
+            Config::write('app.name', $request->get('server_name'));
+            Config::write('app.timezone', $request->get('datetimezone'));
+            Config::set('app.timezone', $request->get('datetimezone'));
+            Config::set('app.name', $request->get('server_name'));
+
+            return redirect()->back()->with('success', __('admin.configSaved'));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors());
         }
-        Config::write('app.name', $request->get('server_name'));
-        Config::write('app.timezone', $request->get('datetimezone'));
-        Config::set('app.timezone', $request->get('datetimezone'));
-        Config::set('app.name', $request->get('server_name'));
-        
-        return redirect()->back()->with('success', __('admin.configSaved'));
     }
 }
