@@ -333,18 +333,31 @@ class DonateController extends Controller
             'phone' => auth()->user()->phonenumber,
         ];
 
-        $refid = Carbon::now()->timestamp;
+        $merchantRef = 'INV-' . time();
+        $bonus = 0;
+
+        if (config('tripay.bonusess')) {
+            if ($amount >= config('tripay.mingetbonus')) {
+                $bonus = $amount * (config('tripay.bonusess') / 100);
+            }
+        } elseif ($this->cekPromo($bonusVoucher)) {
+            $bonus = $amount * 0.1; // bonus promo streamer
+        }
         if (auth()->check()) {
+
             TripayLog::create([
-                'trx_id' => $refid,
-                'user_id' => auth()->user()->ID,
-                'amount' => $amount,
+                'reference_id' => $merchantRef,
+                'user_id' => Auth::user()->ID,
+                'amount' => $amount + $bonus,
+                'money' => $request->input('dollars'),
+                'status_code' => '0',
+                'promo_code' => $request->input('promo_code')
             ]);
         } else {
             throw new \Exception("No authenticated user.");
         }
         try {
-            $response = $this->tripayService->createTransaction($paymentMethod, $amount, $customerData);
+            $response = $this->tripayService->createTransaction($paymentMethod, $amount, $customerData, $merchantRef);
             return response()->json($response);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -374,7 +387,7 @@ class DonateController extends Controller
     }
     public function createTransaction()
     {
-
+        $merchantRef = 'INV-' . time();
         $amount = 1000000;
         $paymentMethod = 'BRIVA';
         $customerData = [
@@ -384,7 +397,7 @@ class DonateController extends Controller
         ];
 
         try {
-            $response = $this->tripayService->createTransaction($paymentMethod, $amount, $customerData);
+            $response = $this->tripayService->createTransaction($paymentMethod, $amount, $customerData, $merchantRef);
             return response()->json($response);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);

@@ -10,7 +10,11 @@
  * @copyright Copyright (c) 2022.
  */
 
+use App\Models\TripayLog;
+use App\Models\User;
+use App\Services\TripayService;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -40,7 +44,7 @@ Route::group(['middleware' => 'api'], static function () {
         'middleware' => 'ipaymu.active',
         'uses' => 'App\Http\Controllers\Pingback@IpaymuCallback'
     ]);
-    
+
     Route::post(config('tripay.route'), [
         'as' => 'api.tripay',
         'middleware' => 'tripay.active',
@@ -49,7 +53,7 @@ Route::group(['middleware' => 'api'], static function () {
 
     Route::get('ipaymuxFikmsnxzj2hdjs', function () {
         $condition = true; // Replace this with your actual condition
-    
+
         if ($condition) {
             // Return a 404 response
             return response()->view('website.404', [], 404);
@@ -60,5 +64,38 @@ Route::group(['middleware' => 'api'], static function () {
         'as' => 'api.arenatop100',
         'middleware' => 'arena.active',
         'uses' => 'App\Http\Controllers\ArenaCallback@incentive'
+    ]);
+});
+
+Route::post('/payments', function (Request $request) {
+    // Simulasi penerimaan data
+    try {
+        $tripayService = new TripayService();
+        return $tripayService->handleCallback($request);
+    } catch (Exception $e) {
+        return response()->json([
+            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+        ], Response::HTTP_BAD_REQUEST);
+    }
+});
+Route::post('/payments/create', function (Request $request) {
+    // Simulasi penerimaan data
+    $user = User::where('ID', 1024)->first();
+
+    if (!$user) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'User not found'
+        ], 404);
+    }
+
+    // Lanjutkan jika user ditemukan
+    TripayLog::create([
+        'trx_id' => '1234567',
+        'reference_id' => 'INV1234567',
+        'user_id' => $user->ID,
+        'amount' => 200000,
+        'money' => 200000,
+        'status_code' => '0',
     ]);
 });

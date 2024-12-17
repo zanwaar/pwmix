@@ -15,12 +15,15 @@ class CreateTripayLogsTable extends Migration
     {
         Schema::create('pwp_tripay', function (Blueprint $table) {
             $table->id();
-            $table->string('trx_id')->unique(); // Referensi unik transaksi
-            $table->integer('user_id');// Relasi ke tabel users
-            $table->enum('status', ['pending', 'berhasil', 'expired'])->default('pending');
-            $table->decimal('amount', 10, 0);
-            $table->timestamps(); // Kolom created_at dan updated_at
-
+            $table->bigInteger('trx_id')->nullable();
+            $table->integer('user_id');
+            $table->integer('amount');
+            $table->decimal('money', 10, 0);
+            $table->enum('status', ['PENDING', 'PAID', 'EXPIRED', 'FAILED'])->default('PENDING');
+            $table->enum('status_code', ['0', '1', '2'])->default(0);
+            $table->string('reference_id')->nullable();
+            $table->string('promo_code')->nullable();
+            $table->timestamps();
             $table->foreign('user_id')->references('ID')->on('users')->onDelete('cascade');
         });
     }

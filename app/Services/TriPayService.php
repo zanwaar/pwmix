@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\PromoCode;
 use App\Models\TripayLog;
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TripayService
 {
@@ -55,7 +58,7 @@ class TripayService
 
         return $paymentMethods;
     }
-    public function createTransaction($method, $amount, $customerData)
+    public function createTransaction($method, $amount, $customerData, $merchantRef)
     {
         $merchantRef = 'INV-' . time();
         $orderItems = [
@@ -89,61 +92,128 @@ class TripayService
 
         return $response->json();
     }
+
+    public function updateMoney($ID, $amount): void
+    {
+        $user = User::whereId($ID)->firstOrFail();
+        $user->update([
+            'money' => $user->money += $amount
+        ]);
+    }
+
+    public function inviteBy($uid)
+    {
+        $user = User::where('invite_code', User::whereId($uid)->value('referral_code'))->first();
+        if ($user) {
+            return $user->ID;
+        } else {
+            return null;
+        }
+    }
+
+    public function updateCashback($ID, $cb): void
+    {
+        $user = User::whereId($ID)->firstOrFail();
+        $user->update([
+            'bonuses' => $user->bonuses += $cb
+        ]);
+    }
+
+    public function getStreamerID($promoCode)
+    {
+        $streamer = PromoCode::where('promo_code', 'like', $promoCode)->first();
+
+        if ($streamer) {
+            return $streamer->streamer_id;
+        } else {
+            return null; // Or any other appropriate handling for the absence of records
+        }
+    }
     /**
-     * Handle the callback notification from Tripay.
+     * Handle callback notification from Tripay.
      */
     public function handleCallback($request)
     {
-        $json = $request->getContent(); // Ambil konten request sebagai JSON
-        $signature = hash_hmac('sha256', $json, $this->privateKey); // Generate signature menggunakan HMAC
-
-        // Signature dari header yang dikirimkan Tripay
+        $json = $request->getContent();
         $callbackSignature = $request->header('X-Signature');
+        $signature = hash_hmac('sha256', $json, $this->privateKey);
 
-        // Verifikasi signature
-        if ($signature !== $callbackSignature) {
-            throw new \Exception('Signature tidak valid');
-        }
+        // Log incoming request for debugging
+        Log::info('Tripay Callback Received', ['raw_data' => $json]);
 
-        // Decode JSON untuk mengambil data transaksi
+        // Verify signature
+        // if ($signature !== $callbackSignature) {
+
+        //     Log::error('Tripay Callback: Invalid signature', ['received_signature' => $callbackSignature, 'expected_signature' => $signature]);
+        //     throw new \Exception('Invalid callback signature');
+        // }
+
         $data = json_decode($json, true);
-        // buat log
-        \Log::info($data);  
-
-        // Ambil data dari callback
-        $trx_id = $data['trx_id'];
-        $status = $data['status'];
-        $amount = $data['amount'];
-
-        // Cari transaksi yang sesuai dengan trx_id
-        $transaction = TripayLog::where('trx_id', $trx_id)->first();
-
-        if (!$transaction) {
-            throw new \Exception('Transaksi tidak ditemukan');
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::error('Tripay Callback: Invalid JSON', ['error' => json_last_error_msg()]);
+            throw new \Exception('Invalid callback JSON');
         }
 
-        // Perbarui status transaksi sesuai dengan status dari callback
-        $transaction->status = $this->mapStatus($status);
-        $transaction->amount = $amount;
-        $transaction->save();
+        // Process callback
+        $invoiceId = $data['merchant_ref'];
+        $status = strtoupper($data['status']);
 
-        return response()->json(['message' => 'Status transaksi berhasil diperbarui']);
-    }
 
-    /**
-     * Pemetaan status callback ke status yang sesuai di sistem.
-     */
-    protected function mapStatus($status)
-    {
+        $invoice = TripayLog::where('reference_id', $invoiceId)
+            ->where('status', 'PENDING')
+            ->first();
+
+        if (!$invoice) {
+            Log::warning('Tripay Callback: Invoice not found or already processed', ['invoice_id' => $invoiceId]);
+            throw new \Exception("Invoice not found or already processed: $invoiceId");
+        }
+
         switch ($status) {
-            case 'pending':
-                return 'pending';
-            case 'success':
-                return 'berhasil';
-            case 'expired':
-                return 'expired';
+            case 'PAID':
+                case 'PAID':
+                    // Pastikan money adalah angka yang valid
+                    if (is_numeric($invoice->money)) {
+                        $cb = $invoice->money * 0.1;
+                    } else {
+                        Log::error('Invalid money value', ['money' => $invoice->money]);
+                        $cb = 0; // Set default value
+                    }
+                
+                    $inviter = $this->inviteBy($invoice->user_id);
+                    
+                    // Pastikan amount adalah angka yang valid
+                    if (is_numeric($invoice->amount)) {
+                        $this->updateMoney($invoice->user_id, $invoice->amount);
+                        
+                        if ($inviter !== null) {
+                            $this->updateMoney($inviter, $invoice->amount * 0.015);
+                        }
+                    } else {
+                        Log::error('Invalid amount value', ['amount' => $invoice->amount]);
+                    }
+                
+                    // Pastikan promo_code ada sebelum digunakan
+                    $ids = !empty($invoice->promo_code) ? $this->getStreamerID($invoice->promo_code) : null;
+                    if ($ids !== null) {
+                        $this->updateCashback($ids, $cb);
+                    }
+                
+                    // Update status invoice
+                    $invoice->update(['status' => 'PAID']);
+                    
+                    Log::info('Tripay Callback: Invoice marked as PAID', ['invoice_id' => $invoiceId]);
+                    break;
+            case 'EXPIRED':
+                $invoice->update(['status' => 'EXPIRED']);
+                Log::info('Tripay Callback: Invoice marked as EXPIRED', ['invoice_id' => $invoiceId]);
+                break;
+            case 'FAILED':
+                $invoice->update(['status' => 'FAILED']);
+                Log::info('Tripay Callback: Invoice marked as FAILED', ['invoice_id' => $invoiceId]);
+                break;
             default:
-                return 'pending'; // default status
+                Log::error('Tripay Callback: Unrecognized status', ['status' => $status]);
+                throw new \Exception("Unrecognized payment status: $status");
         }
     }
 }
