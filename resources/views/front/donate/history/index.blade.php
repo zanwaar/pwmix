@@ -402,7 +402,7 @@
                                     </td>
                                     <td class="py-3 px-6 text-left">
                                         <div class="flex items-center">
-                                            <span>{{ number_format(($tripay->amount ),0,'','.') . ' ' . config('pw-config.currency_name') }}</span>
+                                            <span>{{ number_format(($tripay->amount ),0,'','.')  }}</span>
                                         </div>
                                     </td>
                                 </tr>
