@@ -309,6 +309,17 @@ return [
                 'vc' => ':currency',
                 'money' => 'Harga',
                 'status' => 'Status'
+            ]   
+            ,
+            'tripay' => [
+                'trx_id' => 'Trx ID',
+                'date' => 'Tanggal',
+                'status' => 'Status',
+                'color' => [
+                    'success' => 'text-green-800',
+                    'failed' => 'text-yellow-800',
+                    'pending' => 'text-yellow-800',
+                ]
             ]
         ],
         'success' => 'Perubahan Anda telah disimpan!',

@@ -365,6 +365,7 @@
                     @endif
                 </div>
                 @endif
+                
                 @if( config('tripay.status') )
                 <div id="tripay" class="hidden p-4 mx-auto">
                     @if( $tripay->items() )
@@ -375,7 +376,7 @@
                                     <th class="py-3 px-6 text-left">{{ __('donate.history.table.tripay.trx_id') }}</th>
                                     <th class="py-3 px-6 text-left">{{ __('donate.history.table.tripay.date') }}</th>
                                     <th class="py-3 px-6 text-left">{{ __('donate.history.table.tripay.status') }}</th>
-                                    <th class="py-3 px-6 text-left">{{ __('donate.history.table.tripay.color.success') }}</th>
+                                    <th class="py-3 px-6 text-left">Top UP</th>
                                 </tr>
                             </thead>
                             <tbody class="text-gray-600 text-xs dark:text-light">
@@ -393,7 +394,10 @@
                                     </td>
                                     <td class="py-3 px-6 text-left">
                                         <div class="flex items-center">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $tripay->status == 'berhasil' ? 'text-green-800' : 'text-yellow-800' }} {{ $tripay->status == 'berhasil' ? 'bg-green-100' : 'bg-yellow-100' }}">{{ strtoupper($tripay->status) }}</span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $tripay->status == 'PAID' ? 'text-green-800' : 'text-yellow-800' }} {{ $tripay->status == 'PAID' ? 'bg-green-100' : 'bg-yellow-100' }}">
+                                                {{ strtoupper($tripay->status) }}
+                                            </span>
+                                            
                                         </div>
                                     </td>
                                     <td class="py-3 px-6 text-left">
@@ -405,7 +409,7 @@
                                 @endforeach
                             </tbody>
                         </table>
-                        {{ $tripay->render() }}
+                        {{-- {{ $tripay->render() }} --}}
                     </div>
                     @else
                     {{ __('donate.empty') }}

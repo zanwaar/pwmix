@@ -199,13 +199,14 @@ class DonateController extends Controller
 
     public function getHistoryIndex()
     {
-        $logbank = BankLog::whereGameid(Auth::user()->ID)->paginate(10);
-        $pws = Paymentwall::whereUserid(Auth::user()->ID)->paginate(10);
-        $ingamelogs = ServiceLog::whereUserid(Auth::user()->ID)->paginate(10);
-        $shoplogs = ShopLog::whereUserid(Auth::user()->ID)->paginate(10);
-        $paypals = Paypal::whereUserId(Auth::user()->ID)->paginate(10);
-        $ipaymu = IpaymuLog::whereUserId(Auth::user()->ID)->paginate(10);
-        $tripay = TripayLog::whereUserId(Auth::user()->ID)->paginate(10);
+        // Mengurutkan berdasarkan tanggal terbaru
+        $logbank = BankLog::whereGameid(Auth::user()->ID)->orderBy('created_at', 'desc')->paginate(10);
+        $pws = Paymentwall::whereUserid(Auth::user()->ID)->orderBy('created_at', 'desc')->paginate(10);
+        $ingamelogs = ServiceLog::whereUserid(Auth::user()->ID)->orderBy('created_at', 'desc')->paginate(10);
+        $shoplogs = ShopLog::whereUserid(Auth::user()->ID)->orderBy('created_at', 'desc')->paginate(10);
+        $paypals = Paypal::whereUserId(Auth::user()->ID)->orderBy('created_at', 'desc')->paginate(10);
+        $ipaymu = IpaymuLog::whereUserId(Auth::user()->ID)->orderBy('created_at', 'desc')->paginate(10);
+        $tripay = TripayLog::whereUserId(Auth::user()->ID)->orderBy('created_at', 'desc')->paginate(10);
         $user = new User();
         return view('front.donate.history.index', [
             'banks' => $logbank,

@@ -239,8 +239,8 @@ return [
         'route' => 'Route',
         'returnUrl' => 'URL Callback Website',
         'returnUrl_desc' => 'URL Callback Website Tripay,',
-            'list' => 'Nominal yang diinginkan, pilihan satuan Rp, seperti 10000, 20000, 50000',
-            'list_desc' => 'Pilihan satuan Rp, seperti 10000, 20000, 50000',
+        'list' => 'Nominal yang diinginkan, pilihan satuan Rp, seperti 10000, 20000, 50000',
+        'list_desc' => 'Pilihan satuan Rp, seperti 10000, 20000, 50000',
     ],
     'history' => [
         'title' => 'Transaction History',
@@ -311,11 +311,15 @@ return [
                 'status' => 'Status'
             ],
             'tripay' => [
-                'trans_id' => 'Trx ID',
+                'trx_id' => 'Trx ID',
                 'date' => 'Date',
-                'vc' => ':currency',
-                'money' => 'Price',
-                'status' => 'Status'
+                'status' => 'Status',
+                'color' => [
+                    'success' => 'text-green-800',
+                    'failed' => 'text-yellow-800',
+                    'pending' => 'text-yellow-800',
+                ]
+                
             ]
         ],
         'success' => 'Your change has been saved!',
