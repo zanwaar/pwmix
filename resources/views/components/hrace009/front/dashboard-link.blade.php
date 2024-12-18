@@ -3,7 +3,18 @@
     <!-- active & hover classes 'bg-primary-100 dark:bg-primary' -->
     <section id="subheader" class="jarallax">
                 <div class="de-gradient-edge-bottom"></div>
-                <img src="{{ asset('img/bg/6969.png') }}" class="jarallax-img" alt="">
+             <div class="flex items-center justify-center py-4 px-8 text-center">
+                <img id="current_logo" src="
+                @if( config('pw-config.logo') === 'img/logo/logo.png' )
+                    {{ asset(config('pw-config.logo')) }}
+                    @elseif( ! config('pw-config.logo') )
+                    {{ asset( 'img/logo/logo.png' ) }}
+                    @else
+                    {{ asset('uploads/logo/' . config('pw-config.logo') ) }}
+                @endif
+                "
+                 alt="{{ config('pw-config.server_name') }}" class="w-full max-w-xs" />
+             </div>
                 <div class="container z-500">
                     <div class="row">
                         </div>

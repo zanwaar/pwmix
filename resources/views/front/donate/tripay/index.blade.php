@@ -95,9 +95,9 @@
                     </div>
                     <div>
                         <label for="bonus-voucher" class="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
-                            Kode Voucher Bonus
+                            Promo Code
                         </label>
-                        <input type="text" id="bonus-voucher" class="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-dark text-gray-900 dark:text-white" placeholder="Masukkan kode voucher">
+                        <input type="text" id="bonus-voucher" class="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-dark text-gray-900 dark:text-white" placeholder="promo code">
                     </div>
                     <button id="continue-payment" class="w-full px-4 py-2 bg-cyan text-gray-900 dark:text-white  rounded-md hover:bg-cyan-dark focus:outline-none focus:ring-2 focus:ring-cyan focus:ring-opacity-50 inline-flex items-center justify-center">
                         Lanjutkan Pembayaran

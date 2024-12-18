@@ -83,8 +83,12 @@ return [
     |
     */
 
+    // 'links' => [
+    //     '/var/www/html/uploads' => '/var/www/jimx1337/public/uploads',
+    // ],
     'links' => [
-        '/var/www/html/uploads' => '/var/www/jimx1337/public/uploads',
+        public_path('storage') => storage_path('app/public'),
     ],
+
 
 ];

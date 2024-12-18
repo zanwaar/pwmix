@@ -135,18 +135,18 @@ class TripayService
     public function handleCallback($request)
     {
         $json = $request->getContent();
-        $callbackSignature = $request->header('X-Signature');
+        $callbackSignature = $request->header('x-callback-signature');
         $signature = hash_hmac('sha256', $json, $this->privateKey);
 
         // Log incoming request for debugging
         Log::info('Tripay Callback Received', ['raw_data' => $json]);
 
         // Verify signature
-        // if ($signature !== $callbackSignature) {
+        if ($signature !== $callbackSignature) {
 
-        //     Log::error('Tripay Callback: Invalid signature', ['received_signature' => $callbackSignature, 'expected_signature' => $signature]);
-        //     throw new \Exception('Invalid callback signature');
-        // }
+            Log::error('Tripay Callback: Invalid signature', ['received_signature' => $callbackSignature, 'expected_signature' => $signature]);
+            throw new \Exception('Invalid callback signature');
+        }
 
         $data = json_decode($json, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -170,39 +170,39 @@ class TripayService
 
         switch ($status) {
             case 'PAID':
-                case 'PAID':
-                    // Pastikan money adalah angka yang valid
-                    if (is_numeric($invoice->money)) {
-                        $cb = $invoice->money * 0.1;
-                    } else {
-                        Log::error('Invalid money value', ['money' => $invoice->money]);
-                        $cb = 0; // Set default value
+            case 'PAID':
+                // Pastikan money adalah angka yang valid
+                if (is_numeric($invoice->money)) {
+                    $cb = $invoice->money * 0.1;
+                } else {
+                    Log::error('Invalid money value', ['money' => $invoice->money]);
+                    $cb = 0; // Set default value
+                }
+
+                $inviter = $this->inviteBy($invoice->user_id);
+
+                // Pastikan amount adalah angka yang valid
+                if (is_numeric($invoice->amount)) {
+                    $this->updateMoney($invoice->user_id, $invoice->amount);
+
+                    if ($inviter !== null) {
+                        $this->updateMoney($inviter, $invoice->amount * 0.015);
                     }
-                
-                    $inviter = $this->inviteBy($invoice->user_id);
-                    
-                    // Pastikan amount adalah angka yang valid
-                    if (is_numeric($invoice->amount)) {
-                        $this->updateMoney($invoice->user_id, $invoice->amount);
-                        
-                        if ($inviter !== null) {
-                            $this->updateMoney($inviter, $invoice->amount * 0.015);
-                        }
-                    } else {
-                        Log::error('Invalid amount value', ['amount' => $invoice->amount]);
-                    }
-                
-                    // Pastikan promo_code ada sebelum digunakan
-                    $ids = !empty($invoice->promo_code) ? $this->getStreamerID($invoice->promo_code) : null;
-                    if ($ids !== null) {
-                        $this->updateCashback($ids, $cb);
-                    }
-                
-                    // Update status invoice
-                    $invoice->update(['status' => 'PAID']);
-                    
-                    Log::info('Tripay Callback: Invoice marked as PAID', ['invoice_id' => $invoiceId]);
-                    break;
+                } else {
+                    Log::error('Invalid amount value', ['amount' => $invoice->amount]);
+                }
+
+                // Pastikan promo_code ada sebelum digunakan
+                $ids = !empty($invoice->promo_code) ? $this->getStreamerID($invoice->promo_code) : null;
+                if ($ids !== null) {
+                    $this->updateCashback($ids, $cb);
+                }
+
+                // Update status invoice
+                $invoice->update(['status' => 'PAID']);
+
+                Log::info('Tripay Callback: Invoice marked as PAID', ['invoice_id' => $invoiceId]);
+                break;
             case 'EXPIRED':
                 $invoice->update(['status' => 'EXPIRED']);
                 Log::info('Tripay Callback: Invoice marked as EXPIRED', ['invoice_id' => $invoiceId]);

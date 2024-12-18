@@ -96,7 +96,7 @@ class SystemController extends Controller
                 if ($logoFile->isValid()) {
                     $logo = $logoFile->getClientOriginalName();
                     Config::write('pw-config.logo', $logo);
-                    $logoFile->storeAs('logo', $logo, 'hrace009');
+                    $logoFile->storeAs('logo', $logo, 'public');
                 } else {
                     return back()->withErrors('Uploaded file is invalid.');
                 }

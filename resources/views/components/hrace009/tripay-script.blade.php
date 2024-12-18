@@ -175,7 +175,7 @@
 
                  
                 } else {
-                    showEmpty();
+                    showMinimum();
                 }
             });
         }
@@ -198,7 +198,8 @@
             continuePayment.addEventListener('click', () => {
                 const paymentMethod = document.getElementById('payment-method')?.value || '';
                 const bonusVoucher = document.getElementById('bonus-voucher')?.value || '';
-                
+                const promoCode = document.getElementById('bonus-voucher')?.value || ''; // Promo code tetap diperiksa, tapi boleh kosong
+
                 if (!selectedAmount || !paymentMethod) {
                     alert('Silakan pilih nominal dan metode pembayaran terlebih dahulu.');
                     return;
@@ -206,38 +207,74 @@
 
                 continuePayment.disabled = true;
                 continuePayment.innerHTML = `
-                   <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              <span>Memproses...</span>
-                   
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Memproses...</span>
                 `;
 
-            
-                $.post("{{ route('app.donate.tripay.submit') }}", {
-                    _token: '{{ csrf_token() }}', 
-                    amount: selectedAmount,
-                    payment_method: paymentMethod,
-                    bonus_voucher: bonusVoucher,
+                const checkPromo = promoCode
+                    ? $.post("/dashboard/promo", { 
+                        promo_code: promoCode, 
+                        _token: '{{ csrf_token() }}' 
+                    })
+                    : Promise.resolve({ valid: true }); // Jika promo kosong, langsung valid
+
+                // Proses promo (jika ada) sebelum lanjut pembayaran
+                checkPromo
+                .then((promoResponse) => {
+                    if (promoCode && !promoResponse.valid) {
+                        // Promo tidak valid (hanya jika diisi)
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Promo Code',
+                            text: 'Kode promo yang Anda masukkan tidak valid.',
+                        });
+
+                        continuePayment.disabled = false;
+                        continuePayment.innerHTML = `Lanjutkan Pembayaran`;
+                        return; // Stop jika promo tidak valid
+                    }
+
+                    // Promo valid atau kosong, lanjutkan ke pembayaran
+                    $.post("{{ route('app.donate.tripay.submit') }}", {
+                        _token: '{{ csrf_token() }}', 
+                        amount: selectedAmount,
+                        payment_method: paymentMethod,
+                        bonus_voucher: bonusVoucher,
+                    })
+                    .done((paymentResponse) => {
+                        // Redirect ke halaman pembayaran
+                        window.location.href = paymentResponse.data.checkout_url;
+                        closeModal();
+                    })
+                    .fail((error) => {
+                        console.error(error);
+                        closeModal();
+                        gagalDonasi();
+                    })
+                    .always(() => {
+                        // Reset tombol setelah selesai
+                        continuePayment.disabled = false;
+                        continuePayment.innerHTML = `Lanjutkan Pembayaran`;
+                    });
                 })
-                .done((response) => {
-                    window.location.href = response.data.checkout_url;
-                    closeModal();
-                
-                })
-                .fail((error) => {
-                    console.log(error);
-                    closeModal();
-                    gagalDonasi();
-                })
-                .always(() => {
-                    // Reset tombol setelah selesai
+                .catch((error) => {
+                    console.error('Error checking promo:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Terjadi kesalahan saat memeriksa promo code. Silakan coba lagi.',
+                    });
+
+                    // Reset tombol jika terjadi error saat cek promo
                     continuePayment.disabled = false;
                     continuePayment.innerHTML = `Lanjutkan Pembayaran`;
                 });
             });
         }
+
 
 
         if (paymentModal) {
