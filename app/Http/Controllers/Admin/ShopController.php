@@ -126,13 +126,13 @@ class ShopController extends Controller
         $input = $request->except(['_token', '_method']);
         if ($request->has('image')) {
             $image = $request->file('image')->getClientOriginalName();
-            $request->file('image')->storeAs('shops/image', $image, config('filesystems.default'));
+            $request->file('image')->storeAs('shops/image', $image, 'hrace009');
             $input['image'] = $image;
         }
 
         if ($request->has('icon')) {
             $icon = $request->file('icon')->getClientOriginalName();
-            $request->file('icon')->storeAs('shops/icon', $icon, config('filesystems.default'));
+            $request->file('icon')->storeAs('shops/icon', $icon, 'hrace009');
             $input['icon'] = $icon;
         }
 
@@ -193,7 +193,7 @@ class ShopController extends Controller
     public function upload(Request $request): JsonResponse
     {
         $fileName = $request->file('file')->getClientOriginalName();
-        $path = $request->file('file')->storeAs('shops', $fileName, config('filesystems.default'));
+        $path = $request->file('file')->storeAs('shops', $fileName, 'hrace009');
         return response()->json([
             'location' => url('/uploads/' . $path)
         ]);
