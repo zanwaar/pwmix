@@ -170,7 +170,6 @@ class TripayService
 
         switch ($status) {
             case 'PAID':
-            case 'PAID':
                 // Pastikan money adalah angka yang valid
                 if (is_numeric($invoice->money)) {
                     $cb = $invoice->money * 0.1;
@@ -186,7 +185,8 @@ class TripayService
                     $this->updateMoney($invoice->user_id, $invoice->amount);
 
                     if ($inviter !== null) {
-                        $this->updateMoney($inviter, $invoice->amount * 0.015);
+                        // $this->updateMoney($inviter, $invoice->amount * 0.015);
+                        $this->updateMoney($inviter, $invoice->amount);
                     }
                 } else {
                     Log::error('Invalid amount value', ['amount' => $invoice->amount]);

@@ -57,8 +57,8 @@ class ShopController extends Controller
     {
         $image = $request->file('image')->getClientOriginalName();
         $icon = $request->file('icon')->getClientOriginalName();
-        $request->file('image')->storeAs('shops/image', $image, config('filesystems.default'));
-        $request->file('icon')->storeAs('shops/icon', $icon, config('filesystems.default'));
+        $request->file('image')->storeAs('shops/image', $image, 'hrace009');
+        $request->file('icon')->storeAs('shops/icon', $icon, 'hrace009');
 
         $input = $request->all();
         $input['image'] = $image;
